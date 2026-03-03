@@ -10,12 +10,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        # 替换未配置的自定义变量，拉取当前仓库的主分支代码
         with:
-          repository: ${{ vars.REPOSITORY }}
-          ref: ${{ vars.REF }}
+          repository: ${{ github.repository }}
+          ref: main  # 如果你的主分支是master，改成ref: master
 
       - name: Setup uv
         uses: astral-sh/setup-uv@v7
+        with:
+          version: latest  # 指定最新版uv，避免版本兼容问题
 
       - name: Run script
         env:
@@ -36,4 +39,9 @@ jobs:
           MODEL_NAME: ${{ secrets.MODEL_NAME }}
           LANGUAGE: ${{ vars.LANGUAGE }}
         run: |
-          uv run main.py
+          # 强制切换到代码根目录，确保能找到main.py
+          cd ${{ github.workspace }}
+          # 安装依赖（uv标准操作，避免依赖缺失）
+          uv sync
+          # 显式调用python执行脚本，避免uv路径识别问题
+          uv run python main.py
